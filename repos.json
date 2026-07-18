@@ -3,7 +3,7 @@
     "kernelSource": {
       "name": "PitchKernel",
       "repo": "https://github.com/MujinnPark/PitchKernel-6.1",
-      "branch": "main",
+      "branch": "android14-6.1-lts",
       "device": "malachite",
       "defconfig": "gki_defconfig"
     },
@@ -45,7 +45,7 @@
       "use": true,
       "release": true,
       "repo": "https://github.com/MujinnPark/AnyKernel3-Pitchkernel",
-      "branch": "main"
+      "branch": "gki-2.0"
     }
   }
 ]
