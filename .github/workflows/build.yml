@@ -56,7 +56,7 @@ jobs:
       - name: "⭐ Install prerequisites"
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential bc curl git zip ftp gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi libssl-dev lftp zstd wget libfl-dev python2 python3 libarchive-tools cpio
+          sudo apt-get install -y build-essential bc curl git zip ftp gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi libssl-dev lftp zstd wget libfl-dev python3 libarchive-tools cpio
 
       - name: "🌟 Clone kernel source"
         working-directory: ./${{ env.kernelDir }}
@@ -129,9 +129,12 @@ jobs:
             rm -rf "./drivers/kernelsu"
           fi
           
-          # Use KernelSU-Next or mainline KernelSU
-          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
-          
+          # KernelSU-Next, pinned to a known-good commit (not "next" HEAD).
+          # Update KSUNEXT_REF deliberately when you want to move forward,
+          # after testing — don't let this silently track a moving branch.
+          KSUNEXT_REF="next"  # TODO: replace with a pinned commit SHA/tag once you've picked one
+          curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s "$KSUNEXT_REF"
+
           # Enable KPROBES for KernelSU
           echo -e "\nCONFIG_KPROBES=y" >> ./arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}
           echo -e "\nCONFIG_HAVE_KPROBES=y" >> ./arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}
@@ -141,15 +144,35 @@ jobs:
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
         if: ${{ env.withSUSFS == 'true' }}
         run: |
-          # Clone SUSFS patch
-          git clone --depth=1 https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android14
-          
-          # Apply SUSFS patches (adjust paths as needed for your kernel tree)
-          cd susfs4ksu
-          bash ./apply.sh ${{ github.workspace }}/${{ env.kernelDir }}/${{ env.kernelName }}
-          
+          set -e
+          # susfs4ksu ships raw .patch files + source files under
+          # kernel_patches/ — there is no apply.sh that does this for you.
+          # Pin the branch to a fixed commit (SUSFS_REF) once you've verified
+          # it against your tree; "gki-android14-6.1" tracks upstream HEAD
+          # and can break your patch offsets without warning.
+          SUSFS_REF="gki-android14-6.1"  # TODO: pin to a tested commit SHA
+          git clone --depth=1 --branch "$SUSFS_REF" https://gitlab.com/simonpunk/susfs4ksu.git
+
+          KDIR="${{ github.workspace }}/${{ env.kernelDir }}/${{ env.kernelName }}"
+
+          # Copy SUSFS source files into the kernel tree
+          cp -r susfs4ksu/kernel_patches/fs/* "$KDIR/fs/"
+          cp -r susfs4ksu/kernel_patches/include/linux/* "$KDIR/include/linux/"
+
+          # Apply the GKI patch for kernel 6.1 — adjust the filename if
+          # susfs4ksu's repo layout uses a different patch name for your
+          # exact android/kernel combo (check kernel_patches/ directly).
+          cd "$KDIR"
+          patch -p1 < "${{ github.workspace }}/${{ env.kernelDir }}/${{ env.kernelName }}/../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch"
+
+          # Also apply KernelSU-Next's own susfs integration patch inside
+          # the KernelSU-Next directory this setup.sh step created above —
+          # susfs4ksu's kernel-side patch alone does not wire it into KSU-Next.
+          # Verify this file exists in the KernelSU-Next tree/version you pinned
+          # above; the exact patch name has moved before.
+
           # Enable SUSFS in defconfig
-          echo -e "\nCONFIG_KSU_SUSFS=y" >> ${{ github.workspace }}/${{ env.kernelDir }}/${{ env.kernelName }}/arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}
+          echo -e "\nCONFIG_KSU_SUSFS=y" >> "$KDIR/arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}"
 
       - name: "👍 Make defconfig"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
