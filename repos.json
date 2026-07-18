@@ -14,13 +14,17 @@
         "repo": "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86",
         "branch": "android14-release",
         "name": "clang",
-        "binPath": ["bin"]
+        "binPath": [
+          "clang-*/bin"
+        ]
       },
       {
         "repo": "https://android.googlesource.com/platform/prebuilts/gas/linux-x86",
         "branch": "master",
         "name": "gas",
-        "binPath": ["bin"]
+        "binPath": [
+          "."
+        ]
       }
     ],
     "params": {

@@ -80,13 +80,30 @@ jobs:
             branch="$(echo $toolchains | jq -r ".[$i].branch")"
             name="$(echo $toolchains | jq -r ".[$i].name")"
             binPath="$(echo $toolchains | jq -r ".[$i].binPath | @tsv")"
-            
+
             git clone --recursive --branch $branch --depth=1 $repo $name
-            
-            # Add bin paths to PATH
+
+            # Add bin paths to PATH. Each entry in binPath is treated as a
+            # glob relative to $name/ — AOSP's clang prebuilts repo nests
+            # binaries under a versioned dir (e.g. clang-r487747c/bin/,
+            # name changes every few months), so a literal "bin" path
+            # would silently resolve to nothing and leave tools like
+            # ld.lld missing from PATH with no error until link time.
             IFS=$'\t' read -ra paths <<< "$binPath"
             for path in "${paths[@]}"; do
-              echo "$(pwd)/$name/$path" >> $GITHUB_PATH
+              matched=0
+              for resolved in $(pwd)/$name/$path; do
+                if [ -d "$resolved" ]; then
+                  echo "$resolved" >> $GITHUB_PATH
+                  echo "Added to PATH: $resolved"
+                  matched=1
+                fi
+              done
+              if [ "$matched" -eq 0 ]; then
+                echo "::error::binPath '$path' for toolchain '$name' matched no directory. Contents of $name/:"
+                ls -la "$(pwd)/$name"
+                exit 1
+              fi
             done
           done
 
