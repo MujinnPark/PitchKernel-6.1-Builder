@@ -159,11 +159,18 @@ jobs:
           cp -r susfs4ksu/kernel_patches/fs/* "$KDIR/fs/"
           cp -r susfs4ksu/kernel_patches/include/linux/* "$KDIR/include/linux/"
 
-          # Apply the GKI patch for kernel 6.1 — adjust the filename if
-          # susfs4ksu's repo layout uses a different patch name for your
-          # exact android/kernel combo (check kernel_patches/ directly).
+          # Find the GKI patch by pattern instead of a hardcoded filename —
+          # the exact name (e.g. 50_add_susfs_in_<branch>.patch) has moved
+          # before across susfs4ksu releases and branches.
           cd "$KDIR"
-          patch -p1 < "${{ github.workspace }}/${{ env.kernelDir }}/${{ env.kernelName }}/../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch"
+          PATCH_FILE="$(find "${{ github.workspace }}/${{ env.kernelDir }}/susfs4ksu/kernel_patches" -maxdepth 1 -name '50_add_susfs_in_*.patch' | head -n1)"
+          if [ -z "$PATCH_FILE" ]; then
+            echo "::error::No 50_add_susfs_in_*.patch found. Contents of kernel_patches/:"
+            ls -la "${{ github.workspace }}/${{ env.kernelDir }}/susfs4ksu/kernel_patches"
+            exit 1
+          fi
+          echo "Applying $PATCH_FILE"
+          patch -p1 < "$PATCH_FILE"
 
           # Also apply KernelSU-Next's own susfs integration patch inside
           # the KernelSU-Next directory this setup.sh step created above —
