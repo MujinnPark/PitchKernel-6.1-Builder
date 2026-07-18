@@ -26,8 +26,15 @@ jobs:
       - name: "😆 Generate Matrix"
         id: generate-matrix
         run: |
+          # printf %s\\n guarantees a trailing newline before the closing
+          # EOF delimiter, regardless of whether ${{ env.CONFIGURATION }}
+          # itself ends in one — a config file missing its final newline
+          # (e.g. saved via some editors, or written by tools like
+          # json.dump() that don't add one) otherwise merges with the EOF
+          # line and GitHub Actions rejects the whole step with
+          # "Invalid value. Matching delimiter not found 'EOF'".
           echo "repos<<EOF" >> $GITHUB_OUTPUT
-          cat ${{ env.CONFIGURATION }} >> $GITHUB_OUTPUT
+          printf '%s\n' "$(cat ${{ env.CONFIGURATION }})" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
   Build-Kernel:
