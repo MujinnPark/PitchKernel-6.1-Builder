@@ -1,0 +1,51 @@
+[
+  {
+    "kernelSource": {
+      "name": "PitchKernel",
+      "repo": "https://github.com/MujinnPark/PitchKernel-6.1",
+      "branch": "main",
+      "device": "malachite",
+      "defconfig": "gki_defconfig"
+    },
+    "withKernelSU": true,
+    "withSUSFS": true,
+    "toolchains": [
+      {
+        "repo": "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86",
+        "branch": "android14-release",
+        "name": "clang",
+        "binPath": ["bin"]
+      },
+      {
+        "repo": "https://android.googlesource.com/platform/prebuilts/gas/linux-x86",
+        "branch": "master",
+        "name": "gas",
+        "binPath": ["bin"]
+      }
+    ],
+    "params": {
+      "ARCH": "arm64",
+      "CC": "clang",
+      "externalCommand": {
+        "CROSS_COMPILE": "aarch64-linux-gnu-",
+        "CROSS_COMPILE_ARM32": "arm-linux-gnueabi-",
+        "CROSS_COMPILE_COMPAT": "arm-linux-gnueabi-",
+        "CLANG_TRIPLE": "aarch64-linux-gnu-",
+        "AR": "llvm-ar",
+        "NM": "llvm-nm",
+        "OBJCOPY": "llvm-objcopy",
+        "OBJDUMP": "llvm-objdump",
+        "READELF": "llvm-readelf",
+        "STRIP": "llvm-strip",
+        "LD": "ld.lld",
+        "LLVM": "1"
+      }
+    },
+    "AnyKernel3": {
+      "use": true,
+      "release": true,
+      "repo": "https://github.com/MujinnPark/AnyKernel3-Pitchkernel",
+      "branch": "main"
+    }
+  }
+]
