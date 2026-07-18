@@ -50,7 +50,7 @@ log "KernelSU-Next integrated ✅"
 # 2. Branding
 # ======================================================
 
-log "Applying Luminaire branding..."
+log "Applying PitchKernel branding..."
 python3 "${PATCHER_DIR}/branding.py" "${KSU_DIR}/kernel/Kbuild" \
     || error "KernelSU-Next: branding patch failed!"
 log "Branding applied ✅"

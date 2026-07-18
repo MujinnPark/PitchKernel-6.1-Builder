@@ -68,7 +68,7 @@ mark_stage_ok() {
 write_dry_run_image() {
     local path="$1"
     mkdir -p "$(dirname "$path")"
-    echo "Luminaire Protocol — dry-run placeholder, not a real kernel image" > "$path"
+    echo "PitchKernel — dry-run placeholder, not a real kernel image" > "$path"
     log "🧪 DRY RUN — wrote placeholder image to ${path} (compile skipped)"
 }
 

@@ -52,9 +52,9 @@ jobs:
     steps:
       - name: "😄 Checkout"
         uses: actions/checkout@v4
-        # Brings in vendor/luminaire/ (this repo's own copy of the
+        # Brings in vendor/pitchkernel/ (this repo's own copy of the
         # vendored KernelSU-Next+SUSFS scripts) so later steps can call
-        # vendor/luminaire/kernel/apply_ksu_susfs.sh
+        # vendor/pitchkernel/kernel/apply_ksu_susfs.sh
 
       - name: "✨ Create working dir"
         run: mkdir -p $kernelDir
@@ -133,8 +133,8 @@ jobs:
           # hook API SUSFS patches against, so this pulls pershoot's
           # dev-susfs fork instead, pinned to the exact commits Luminaire's
           # own checkpoint system verified as working
-          # (see vendor/luminaire/kernel/android14-6.1-lts/manifest.json).
-          bash "${{ github.workspace }}/vendor/luminaire/kernel/apply_ksu_susfs.sh" \
+          # (see vendor/pitchkernel/kernel/android14-6.1-lts/manifest.json).
+          bash "${{ github.workspace }}/vendor/pitchkernel/kernel/apply_ksu_susfs.sh" \
             "${{ github.workspace }}/${{ env.kernelDir }}/${{ env.kernelName }}"
 
       - name: "👍 Make defconfig"

@@ -3,10 +3,11 @@
 # Minimal KernelSU-Next + SUSFS driver for malachite/PitchKernel
 # ======================================================
 # This is NOT Luminaire's full build.sh — it's a thin driver that sources
-# Luminaire's real, verified ksunext.sh and susfs.sh scripts (vendored
-# under kernel/android14-6.1-lts/ksu/) with the same env vars those
-# scripts expect. No addon system, no checkpoint engine, no other root
-# solutions (SukiSU/ReSukiSU) — just the KSU-Next+SUSFS path.
+# Luminaire's real, verified ksunext.sh and susfs.sh scripts (originally
+# from chainonyourdoor/LuminaireProtocol, vendored here under
+# vendor/pitchkernel/kernel/android14-6.1-lts/ksu/) with the same env vars
+# those scripts expect. No addon system, no checkpoint engine, no other
+# root solutions (SukiSU/ReSukiSU) — just the KSU-Next+SUSFS path.
 #
 # Pinned commits below come from Luminaire's own manifest.json
 # (kernel/android14-6.1-lts/manifest.json), which are the combos their
