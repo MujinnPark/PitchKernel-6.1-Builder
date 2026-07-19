@@ -168,27 +168,27 @@ jobs:
         run: |
           make ${{ env.args }} ${{ env.DEFCONFIG_NAME }}
 
-      - name: "🔧 Disable module signing"
+      - name: "🔧 Fix extract-cert.c USE_PKCS11_ENGINE macro"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
         run: |
           # This kernel tree's certs/extract-cert.c has an incomplete
-          # OpenSSL 3.x backport: it guards the `key_pass` declaration
-          # behind "#ifdef USE_PKCS11_ENGINE" but nothing in the tree ever
-          # defines that macro, while the PKCS#11 code path that USES
-          # key_pass is only excluded by a different, unrelated macro
-          # (OPENSSL_IS_BORINGSSL). Net result: key_pass is referenced but
-          # never declared, and the host build fails with "use of
-          # undeclared identifier 'key_pass'" in certs/extract-cert.c.
-          # Disabling module signing (CONFIG_MODULE_SIG) skips building
-          # extract-cert entirely — fine for a personal, unsigned build.
-          # If you need signed modules later, the real fix is patching
-          # extract-cert.c to add a top-level "#define USE_PKCS11_ENGINE"
-          # matching mainline's OpenSSL-3-aware version, not this workaround.
-          ./scripts/config --file ../${{ env.OUT_DIR }}/.config \
-            --disable MODULE_SIG \
-            --disable MODULE_SIG_ALL \
-            --disable MODULE_SIG_FORCE
-          make ${{ steps.generate-args.outputs.args }} olddefconfig
+          # OpenSSL 3.x backport: `key_pass` is declared behind
+          # "#ifdef USE_PKCS11_ENGINE" (line ~81) but nothing in the tree
+          # ever defines that macro, while the PKCS#11 code path that USES
+          # key_pass (line ~149) is only excluded by a different, unrelated
+          # macro (OPENSSL_IS_BORINGSSL). Net result: key_pass is
+          # referenced but never declared, and the host build fails with
+          # "use of undeclared identifier 'key_pass'".
+          #
+          # NOTE: disabling CONFIG_MODULE_SIG does NOT avoid this — 
+          # certs/Makefile has "hostprogs := extract-cert" unconditionally,
+          # so the file is compiled as a host program regardless of any
+          # config option. The only real fix is making the macro
+          # consistent, which is what this does.
+          if ! grep -q "^#define USE_PKCS11_ENGINE" certs/extract-cert.c; then
+            sed -i '/^#include <openssl\/engine.h>/a #define USE_PKCS11_ENGINE /* added by build workflow: fixes incomplete OpenSSL 3.x backport, see workflow comment */' certs/extract-cert.c
+          fi
+          grep -n "USE_PKCS11_ENGINE" certs/extract-cert.c
 
       - name: "🎶 Build kernel"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
