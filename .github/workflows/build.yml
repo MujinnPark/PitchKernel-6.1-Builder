@@ -168,6 +168,28 @@ jobs:
         run: |
           make ${{ env.args }} ${{ env.DEFCONFIG_NAME }}
 
+      - name: "🔧 Disable module signing"
+        working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
+        run: |
+          # This kernel tree's certs/extract-cert.c has an incomplete
+          # OpenSSL 3.x backport: it guards the `key_pass` declaration
+          # behind "#ifdef USE_PKCS11_ENGINE" but nothing in the tree ever
+          # defines that macro, while the PKCS#11 code path that USES
+          # key_pass is only excluded by a different, unrelated macro
+          # (OPENSSL_IS_BORINGSSL). Net result: key_pass is referenced but
+          # never declared, and the host build fails with "use of
+          # undeclared identifier 'key_pass'" in certs/extract-cert.c.
+          # Disabling module signing (CONFIG_MODULE_SIG) skips building
+          # extract-cert entirely — fine for a personal, unsigned build.
+          # If you need signed modules later, the real fix is patching
+          # extract-cert.c to add a top-level "#define USE_PKCS11_ENGINE"
+          # matching mainline's OpenSSL-3-aware version, not this workaround.
+          ./scripts/config --file out/.config \
+            --disable MODULE_SIG \
+            --disable MODULE_SIG_ALL \
+            --disable MODULE_SIG_FORCE
+          make ${{ steps.generate-args.outputs.args }} olddefconfig
+
       - name: "🎶 Build kernel"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
         env:
