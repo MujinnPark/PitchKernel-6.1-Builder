@@ -184,7 +184,7 @@ jobs:
           # If you need signed modules later, the real fix is patching
           # extract-cert.c to add a top-level "#define USE_PKCS11_ENGINE"
           # matching mainline's OpenSSL-3-aware version, not this workaround.
-          ./scripts/config --file out/.config \
+          ./scripts/config --file ../${{ env.OUT_DIR }}/.config \
             --disable MODULE_SIG \
             --disable MODULE_SIG_ALL \
             --disable MODULE_SIG_FORCE
